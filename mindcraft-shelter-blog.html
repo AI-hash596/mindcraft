@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MINDCRAFT シェルター編 〜自給自足の秘密基地〜</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; }
+  body {
+    font-family:'DotGothic16', sans-serif;
+    background:linear-gradient(180deg,#9fc7e8 0%, #d9c79a 55%, #8a744f 100%);
+    color:#fff; user-select:none; -webkit-user-select:none; touch-action:none;
+  }
+  #c { position:absolute; inset:0; display:block; }
+  #tint { position:absolute; inset:0; pointer-events:none; background:transparent; transition:background 1.2s; }
+  .panel {
+    background:rgba(24,28,22,.78); border:2px solid rgba(210,220,190,.45);
+    border-radius:4px; padding:6px 10px;
+  }
+  #logo { position:absolute; top:10px; left:10px; pointer-events:none; }
+  #logo .en { font-size:24px; letter-spacing:2px; font-weight:bold;
+    color:#fff; text-shadow:2px 2px 0 #33402a, 4px 4px 0 rgba(0,0,0,.35); }
+  #logo .jp { font-size:12px; color:#ffe9c9; text-shadow:1px 1px 0 #33402a; }
+
+  #status { position:absolute; top:62px; left:10px; width:224px; pointer-events:none; font-size:12px; }
+  #hearts { letter-spacing:1px; font-size:13px; margin-bottom:2px; }
+  .bar { height:9px; background:#20261c; border:1px solid rgba(255,255,255,.35); border-radius:2px; overflow:hidden; margin:2px 0 4px; }
+  .bar>i { display:block; height:100%; transition:width .3s; }
+  #wFill { background:linear-gradient(90deg,#2f8fd9,#7fd4ff); }
+  #aFill { background:linear-gradient(90deg,#4fc9a8,#b6ffe6); }
+  #fFill { background:linear-gradient(90deg,#8fb840,#d6f07f); }
+  .barLabel { display:flex; justify-content:space-between; font-size:11px; color:#e4eccf; }
+  #matRow { margin-top:2px; color:#ffd98a; }
+
+  #danger { position:absolute; top:10px; left:50%; transform:translateX(-50%); width:min(330px,58vw); text-align:center; pointer-events:none; }
+  #danger .title { font-size:13px; text-shadow:1px 1px 0 #33402a; margin-bottom:3px; }
+  #dTrack { position:relative; height:18px; border:2px solid rgba(230,235,215,.55); border-radius:3px;
+    background:linear-gradient(90deg,#2c7d4f 0%, #b28a2a 50%, #8c2430 100%); overflow:hidden; }
+  #dTrack .labels { position:absolute; inset:0; display:flex; justify-content:space-between; align-items:center;
+    font-size:11px; padding:0 8px; text-shadow:1px 1px 0 rgba(0,0,0,.6); }
+  #dCursor { position:absolute; top:0; bottom:0; width:4px; background:#fff; box-shadow:0 0 6px #ffd; transition:left .8s; }
+  #dayLabel { position:absolute; top:36px; left:50%; transform:translateX(-50%); font-size:12px;
+    color:#fff; text-shadow:1px 1px 0 #33402a; pointer-events:none; white-space:nowrap; }
+
+  #shelterMeter { position:absolute; top:10px; right:10px; width:170px; font-size:11px; pointer-events:none; }
+  #shelterMeter .title { font-size:12px; margin-bottom:2px; }
+  #shelterMeter div.item { display:flex; justify-content:space-between; color:#dfe8ca; }
+  .ok { color:#9df08a !important; }
+
+  #log { position:absolute; left:10px; bottom:10px; width:min(255px,56vw); font-size:12px; pointer-events:none; }
+  #log .title { font-size:13px; margin-bottom:3px; }
+  #logLines div { padding:1px 0 1px 6px; color:#eef4dd; border-left:3px solid #ffd98a; margin:2px 0; }
+
+  #hotbar { position:absolute; right:10px; bottom:10px; display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; max-width:60vw; }
+  .slot { width:46px; height:48px; border:2px solid rgba(215,225,195,.5); border-radius:4px;
+    background:rgba(24,28,22,.78); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:8.5px; color:#e8eeda; cursor:pointer; text-align:center; line-height:1.1; }
+  .slot.sel { border-color:#fff; box-shadow:0 0 8px #ffe9a8; background:rgba(72,78,52,.9); }
+  .slot .cube { width:16px; height:16px; border-radius:3px; margin-bottom:2px; box-shadow:inset -3px -3px 0 rgba(0,0,0,.3); }
+  .slot .cost { color:#ffd98a; font-size:8px; }
+
+  #btns { position:absolute; right:10px; bottom:70px; display:flex; gap:8px; }
+  .abtn { width:58px; height:44px; border:2px solid rgba(215,225,195,.6); border-radius:6px;
+    background:rgba(30,34,26,.85); color:#fff; font-family:inherit; font-size:13px; }
+  .abtn:active { background:rgba(140,150,100,.9); }
+
+  #cross { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; width:16px; height:16px; }
+  #cross::before,#cross::after { content:""; position:absolute; background:rgba(255,255,255,.9); }
+  #cross::before { left:7px; top:0; width:2px; height:16px; }
+  #cross::after { top:7px; left:0; width:16px; height:2px; }
+
+  #hint { position:absolute; bottom:70px; left:50%; transform:translateX(-50%); font-size:11px;
+    color:#fff; background:rgba(24,28,22,.65); padding:4px 10px; border-radius:4px; pointer-events:none;
+    text-align:center; max-width:90vw; }
+
+  #stick { position:absolute; width:96px; height:96px; border:2px solid rgba(255,255,255,.4); border-radius:50%;
+    background:rgba(255,255,255,.08); display:none; pointer-events:none; }
+  #knob { position:absolute; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.55); left:26px; top:26px; }
+
+  #bFull { position:absolute; top:10px; right:190px; z-index:15;
+    font-family:inherit; font-size:12px; padding:5px 10px; border-radius:4px;
+    border:2px solid rgba(215,225,195,.6); background:rgba(30,34,26,.85); color:#fff; cursor:pointer; }
+  #bFull:active { background:rgba(140,150,100,.9); }
+  #openTab { display:inline-block; margin-top:10px; font-size:11px; color:#ffd98a; }
+
+  #intro { position:absolute; inset:0; background:rgba(14,18,12,.9); z-index:20;
+    display:flex; align-items:center; justify-content:center; padding:16px; }
+  #introBox { max-width:520px; text-align:center; }
+  #introBox h1 { font-size:30px; letter-spacing:3px; text-shadow:3px 3px 0 #33402a; }
+  #introBox h2 { font-size:14px; color:#ffe9c9; margin:2px 0 14px; }
+  #introBox p { font-size:13px; line-height:1.8; color:#e8eeda; text-align:left; margin-bottom:10px; }
+  #introBox .stat { color:#ff9a8a; }
+  #introBox ol { text-align:left; font-size:12px; color:#cfe0b8; margin:0 0 16px 20px; line-height:1.7; }
+  #startBtn { font-family:inherit; font-size:16px; padding:10px 30px; border-radius:6px;
+    border:2px solid #ffe9a8; background:#5a6b3a; color:#fff; cursor:pointer; }
+  #startBtn:active { background:#7a8f50; }
+  #gameover { position:absolute; inset:0; background:rgba(40,10,10,.88); z-index:20;
+    display:none; align-items:center; justify-content:center; text-align:center; }
+  @media (max-width:640px){
+    #logo .en{font-size:19px} #status{width:190px; top:56px} #danger{width:46vw}
+    #shelterMeter{display:none} #log{font-size:11px} #introBox h1{font-size:24px}
+    #bFull{right:10px}
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="tint"></div>
+
+<div id="logo"><div class="en">MINDCRAFT</div><div class="jp">シェルター編 〜自給自足の秘密基地〜</div></div>
+
+<div id="danger">
+  <div class="title">Danger Level</div>
+  <div id="dTrack">
+    <div class="labels"><span>安全</span><span>警報</span><span>汚染</span></div>
+    <div id="dCursor"></div>
+  </div>
+</div>
+<div id="dayLabel">1日目 / 生存中</div>
+
+<div id="status" class="panel">
+  <div>Shelter Status</div>
+  <div id="hearts"></div>
+  <div class="barLabel"><span>水（造水機で生成）</span><span id="wNum"></span></div>
+  <div class="bar"><i id="wFill"></i></div>
+  <div class="barLabel"><span>空気（清浄機でろ過）</span><span id="aNum"></span></div>
+  <div class="bar"><i id="aFill"></i></div>
+  <div class="barLabel"><span>食料（水耕栽培）</span><span id="fNum"></span></div>
+  <div class="bar"><i id="fFill"></i></div>
+  <div id="matRow">資材: <span id="matNum">10</span>（ブロックを掘ると入手）</div>
+</div>
+
+<div id="shelterMeter" class="panel">
+  <div class="title">シェルター整備状況</div>
+  <div class="item" id="ck1"><span>屋根の下にいる</span><span>✕</span></div>
+  <div class="item" id="ck2"><span>造水機が近くに稼働</span><span>✕</span></div>
+  <div class="item" id="ck3"><span>空気清浄機が近くに稼働</span><span>✕</span></div>
+  <div class="item" id="ck4"><span>水耕栽培が近くに稼働</span><span>✕</span></div>
+</div>
+
+<div id="log" class="panel">
+  <div class="title">Shelter Log</div>
+  <div id="logLines"></div>
+</div>
+
+<div id="btns">
+  <button class="abtn" id="bJump">ジャンプ</button>
+  <button class="abtn" id="bBreak">掘る</button>
+  <button class="abtn" id="bPlace">置く</button>
+</div>
+
+<button id="bFull">⛶ 全画面</button>
+<div id="hotbar"></div>
+<div id="cross"></div>
+<div id="hint">PC: クリックで操作開始 / WASD移動 / 左クリック掘る / 右クリック置く / 1〜6で選択<br>スマホ: 左ドラッグ移動 / 右ドラッグ視点 / ボタン操作</div>
+<div id="stick"><div id="knob"></div></div>
+
+<div id="intro">
+  <div id="introBox" class="panel">
+    <h1>MINDCRAFT</h1>
+    <h2>シェルター編 〜自給自足の秘密基地〜</h2>
+    <p>日本のシェルター整備率は、わずか<span class="stat">0.02%</span>。
+    スイスやイスラエルではほぼ100%が当たり前なのに——。
+    地震、断水、停電、そして空からの汚染。危機はもう目の前だ。
+    国が動かないなら、あなたが動く。
+    ただの頑丈な箱ではない、水・空気・食料を自給できる
+    「インフラ自立型シェルター」をこの手で築き、大切な人を守り抜け。</p>
+    <ol>
+      <li>地面を掘って「資材」を集める</li>
+      <li>掘った穴に装甲壁と屋根を作り、地下基地にする</li>
+      <li>造水機（空気から水を作る）・空気清浄機・水耕栽培を設置</li>
+      <li>汚染警報が鳴ったらシェルターに退避して生き延びろ！</li>
+    </ol>
+    <button id="startBtn">シェルター建設を開始</button>
+    <br><a id="openTab" href="#" target="_blank" rel="noopener">画面が小さい場合 → 新しいタブで開く</a>
+  </div>
+</div>
+
+<div id="gameover">
+  <div class="panel" style="padding:24px 30px">
+    <h1 style="font-size:26px; margin-bottom:8px">備えは、間に合わなかった…</h1>
+    <p id="goText" style="font-size:13px; margin-bottom:14px"></p>
+    <button id="retryBtn" class="abtn" style="width:auto; padding:0 24px">もう一度挑戦</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+// ---------- ブロック定義 ----------
+// cost: 設置に必要な資材 / yield: 掘ったとき得る資材
+const TYPES = [
+  { name:"草原",        color:0x7cb84e, emissive:0x1d3510, cost:1, yield:1 },
+  { name:"大地",        color:0x9a7a52, emissive:0x2e2214, cost:1, yield:2 },
+  { name:"岩盤",        color:0x7c8494, emissive:0x1d2230, cost:1, yield:3 },
+  { name:"装甲壁",      color:0xb8bcc4, emissive:0x30343c, cost:2, yield:1 },
+  { name:"造水機",      color:0x4fc3e8, emissive:0x1a6fa0, cost:6, yield:2 },
+  { name:"空気清浄機",  color:0xaef0c0, emissive:0x2f8f5a, cost:6, yield:2 },
+  { name:"水耕栽培",    color:0x8fe05a, emissive:0x2f7a18, cost:5, yield:2 },
+  { name:"備蓄庫",      color:0xd8a24f, emissive:0x6a4416, cost:4, yield:2 }
+];
+const WATER_GEN=4, AIR_GEN=5, FARM=6, STORAGE=7;
+const HOTBAR = [3,4,5,6,7,1]; // 装甲壁/造水機/空気清浄機/水耕栽培/備蓄庫/大地
+
+// ---------- ワールド ----------
+const SIZE = 20, MAXH = 12;
+let world;
+const K = (x,y,z)=>x+","+y+","+z;
+let rng;
+function rnd(){ rng = (rng*1103515245+12345) & 0x7fffffff; return rng/0x7fffffff; }
+function genWorld(){
+  world = new Map(); rng = 424242;
+  for(let x=0;x<SIZE;x++) for(let z=0;z<SIZE;z++){
+    let h = 6 + Math.round(Math.sin(x*0.4)*0.8 + Math.cos(z*0.35)*0.8);
+    h = Math.max(5, Math.min(7, h));
+    for(let y=0;y<h;y++){
+      world.set(K(x,y,z), y===h-1 ? 0 : (y>=h-3 ? 1 : 2));
+    }
+  }
+}
+
+// ---------- Three.js ----------
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:false});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xcbb98a, 18, 55);
+const camera = new THREE.PerspectiveCamera(72, 1, 0.1, 120);
+scene.add(new THREE.AmbientLight(0xdcd6c0, 0.8));
+const sun = new THREE.DirectionalLight(0xfff0cf, 0.85);
+sun.position.set(0.5, 1, 0.35); scene.add(sun);
+
+const box = new THREE.BoxGeometry(1,1,1);
+const mats = TYPES.map(t=>new THREE.MeshLambertMaterial({color:t.color, emissive:t.emissive}));
+let meshes = [];
+const NB = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+function rebuild(){
+  meshes.forEach(m=>{ scene.remove(m); });
+  meshes = [];
+  const byType = TYPES.map(()=>[]);
+  world.forEach((t,key)=>{
+    const [x,y,z] = key.split(",").map(Number);
+    for(const n of NB){
+      if(!world.has(K(x+n[0],y+n[1],z+n[2]))){ byType[t].push([x,y,z]); break; }
+    }
+  });
+  const m4 = new THREE.Matrix4();
+  byType.forEach((list,t)=>{
+    if(!list.length) return;
+    const im = new THREE.InstancedMesh(box, mats[t], list.length);
+    list.forEach((p,i)=>{ m4.setPosition(p[0]+0.5, p[1]+0.5, p[2]+0.5); im.setMatrixAt(i, m4); });
+    im.userData.type=t; im.userData.coords=list;
+    scene.add(im); meshes.push(im);
+  });
+}
+
+const hl = new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(1.02,1.02,1.02)),
+  new THREE.LineBasicMaterial({color:0xffffff})
+);
+hl.visible=false; scene.add(hl);
+
+// ---------- プレイヤー ----------
+const player = { x:SIZE/2, z:SIZE/2, feet:9, vy:0, yaw:0.6, pitch:-0.3, grounded:false };
+function topY(x,z){
+  if(x<0||z<0||x>=SIZE||z>=SIZE) return 99;
+  for(let y=MAXH;y>=0;y--) if(world.has(K(x,y,z))) return y+1;
+  return 0;
+}
+function roofed(){
+  const cx=Math.floor(player.x), cz=Math.floor(player.z);
+  const from = Math.floor(player.feet)+2;
+  for(let y=from;y<=MAXH;y++) if(world.has(K(cx,y,cz))) return true;
+  return false;
+}
+function deviceNear(type, r){
+  const px=player.x, py=player.feet+1, pz=player.z;
+  let found=false;
+  world.forEach((t,key)=>{
+    if(found||t!==type) return;
+    const [x,y,z]=key.split(",").map(Number);
+    const dx=x+0.5-px, dy=y+0.5-py, dz=z+0.5-pz;
+    if(dx*dx+dy*dy+dz*dz < r*r) found=true;
+  });
+  return found;
+}
+
+// ---------- 入力 ----------
+const keys = {};
+addEventListener("keydown",e=>{ keys[e.code]=true;
+  if(e.code.startsWith("Digit")){ const n=+e.code.slice(5); if(n>=1&&n<=HOTBAR.length) selectSlot(n-1); } });
+addEventListener("keyup",e=>keys[e.code]=false);
+
+let locked=false;
+canvas.addEventListener("click",()=>{ if(started && !isTouch && !locked) canvas.requestPointerLock(); });
+document.addEventListener("pointerlockchange",()=>{ locked=document.pointerLockElement===canvas;
+  document.getElementById("hint").style.display = locked?"none":""; });
+addEventListener("mousemove",e=>{
+  if(!locked) return;
+  player.yaw -= e.movementX*0.0025;
+  player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch - e.movementY*0.0025));
+});
+canvas.addEventListener("mousedown",e=>{ if(!locked) return;
+  if(e.button===0) doBreak(); else if(e.button===2) doPlace(); });
+canvas.addEventListener("contextmenu",e=>e.preventDefault());
+
+const isTouch = matchMedia("(pointer:coarse)").matches;
+if(!isTouch) document.getElementById("btns").style.display="none";
+const stick=document.getElementById("stick"), knob=document.getElementById("knob");
+let moveId=null, lookId=null, moveVec={x:0,y:0}, origin={x:0,y:0}, lastLook={x:0,y:0};
+canvas.addEventListener("touchstart",e=>{
+  for(const t of e.changedTouches){
+    if(t.clientX<innerWidth/2 && moveId===null){
+      moveId=t.identifier; origin={x:t.clientX,y:t.clientY};
+      stick.style.display="block";
+      stick.style.left=(t.clientX-48)+"px"; stick.style.top=(t.clientY-48)+"px";
+    } else if(lookId===null){ lookId=t.identifier; lastLook={x:t.clientX,y:t.clientY}; }
+  }
+  e.preventDefault();
+},{passive:false});
+canvas.addEventListener("touchmove",e=>{
+  for(const t of e.changedTouches){
+    if(t.identifier===moveId){
+      let dx=t.clientX-origin.x, dy=t.clientY-origin.y;
+      const len=Math.hypot(dx,dy), max=40;
+      if(len>max){ dx=dx/len*max; dy=dy/len*max; }
+      moveVec={x:dx/max,y:dy/max};
+      knob.style.left=(26+dx)+"px"; knob.style.top=(26+dy)+"px";
+    } else if(t.identifier===lookId){
+      player.yaw -= (t.clientX-lastLook.x)*0.005;
+      player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch-(t.clientY-lastLook.y)*0.005));
+      lastLook={x:t.clientX,y:t.clientY};
+    }
+  }
+  e.preventDefault();
+},{passive:false});
+function endTouch(e){
+  for(const t of e.changedTouches){
+    if(t.identifier===moveId){ moveId=null; moveVec={x:0,y:0}; stick.style.display="none"; knob.style.left="26px"; knob.style.top="26px"; }
+    if(t.identifier===lookId) lookId=null;
+  }
+}
+canvas.addEventListener("touchend",endTouch);
+canvas.addEventListener("touchcancel",endTouch);
+document.getElementById("bJump").addEventListener("touchstart",e=>{e.preventDefault(); jump();});
+document.getElementById("bBreak").addEventListener("touchstart",e=>{e.preventDefault(); doBreak();});
+document.getElementById("bPlace").addEventListener("touchstart",e=>{e.preventDefault(); doPlace();});
+function jump(){ if(player.grounded){ player.vy=7; player.grounded=false; } }
+
+// ---------- 掘る / 置く ----------
+const ray = new THREE.Raycaster(); ray.far=6.5;
+function pick(){
+  ray.setFromCamera({x:0,y:0}, camera);
+  const hits = ray.intersectObjects(meshes);
+  if(!hits.length) return null;
+  const h = hits[0];
+  return { coord:h.object.userData.coords[h.instanceId], type:h.object.userData.type, normal:h.face.normal };
+}
+function doBreak(){
+  if(!started||over) return;
+  const p = pick(); if(!p) return;
+  const [x,y,z]=p.coord;
+  if(y===0){ addLog("岩盤の底だ。これ以上は掘れない"); return; }
+  world.delete(K(x,y,z)); rebuild();
+  st.mat += TYPES[p.type].yield;
+  if(p.type===WATER_GEN||p.type===AIR_GEN||p.type===FARM||p.type===STORAGE)
+    addLog(TYPES[p.type].name+"を回収した");
+}
+function doPlace(){
+  if(!started||over) return;
+  const p = pick(); if(!p) return;
+  const t = HOTBAR[sel];
+  if(st.mat < TYPES[t].cost){ addLog("資材が足りない！掘って集めよう"); return; }
+  const nx=p.coord[0]+Math.round(p.normal.x),
+        ny=p.coord[1]+Math.round(p.normal.y),
+        nz=p.coord[2]+Math.round(p.normal.z);
+  if(nx<0||nz<0||nx>=SIZE||nz>=SIZE||ny<0||ny>MAXH) return;
+  if(world.has(K(nx,ny,nz))) return;
+  const px=Math.floor(player.x), pz=Math.floor(player.z);
+  if(nx===px&&nz===pz&&ny>=Math.floor(player.feet)&&ny<Math.floor(player.feet)+2) return;
+  world.set(K(nx,ny,nz), t); rebuild();
+  st.mat -= TYPES[t].cost;
+  if(t===WATER_GEN) addLog("造水機を設置。空気中の水分から飲料水を生成する");
+  else if(t===AIR_GEN) addLog("空気清浄機を設置。NBC対応フィルターが稼働開始");
+  else if(t===FARM) addLog("水耕栽培を設置。地下でも食料を自給できる");
+  else if(t===STORAGE) addLog("備蓄庫を設置。消耗がゆるやかになる");
+}
+
+// ---------- ホットバー ----------
+let sel=0;
+const hotbar=document.getElementById("hotbar");
+HOTBAR.forEach((t,i)=>{
+  const d=document.createElement("div");
+  d.className="slot";
+  d.innerHTML='<div class="cube" style="background:#'+TYPES[t].color.toString(16).padStart(6,"0")+'"></div>'
+    + TYPES[t].name + '<span class="cost">資材'+TYPES[t].cost+'</span>';
+  d.addEventListener("pointerdown",e=>{ e.stopPropagation(); selectSlot(i); });
+  hotbar.appendChild(d);
+});
+function selectSlot(i){ sel=i; [...hotbar.children].forEach((el,j)=>el.classList.toggle("sel",j===i)); }
+selectSlot(0);
+
+// ---------- ゲーム状態 ----------
+const st = { hp:10, hpMax:10, water:85, air:90, food:80, mat:10 };
+let phase="calm", phaseT=0, day=1, survived=0, started=false, over=false;
+const PHASE_LEN = { calm:38, alert:12, fallout:20 };
+function addLog(msg){
+  const lines=document.getElementById("logLines");
+  const d=document.createElement("div"); d.textContent=msg;
+  lines.prepend(d);
+  while(lines.children.length>3) lines.removeChild(lines.lastChild);
+}
+const tint=document.getElementById("tint");
+function setPhase(p){
+  phase=p; phaseT=0;
+  if(p==="calm"){ tint.style.background="transparent"; }
+  else if(p==="alert"){ tint.style.background="rgba(230,180,40,.14)";
+    addLog("警報！まもなく地上が汚染される。シェルターへ退避！"); }
+  else { tint.style.background="rgba(160,30,40,.24)";
+    addLog("汚染発生中…屋根と空気清浄機がなければ危険だ"); }
+}
+
+// ---------- HUD ----------
+function updateHUD(){
+  let h=""; for(let i=0;i<st.hpMax;i++) h += i<Math.ceil(st.hp)?"❤":"🖤";
+  document.getElementById("hearts").textContent=h;
+  const set=(id,v)=>{ document.getElementById(id+"Fill").style.width=Math.max(0,v)+"%";
+    document.getElementById(id+"Num").textContent=Math.max(0,Math.round(v)); };
+  set("w",st.water); set("a",st.air); set("f",st.food);
+  document.getElementById("matNum").textContent=st.mat;
+  const pos = phase==="calm" ? 8 : phase==="alert" ? 50 : 92;
+  document.getElementById("dCursor").style.left="calc("+pos+"% - 2px)";
+  document.getElementById("dayLabel").textContent =
+    day+"日目 / "+(phase==="calm"?"平常":phase==="alert"?"警報発令中":"汚染発生中")
+    +(survived>0?" / 生還"+survived+"回":"");
+  const marks=[roofed(), deviceNear(WATER_GEN,6), deviceNear(AIR_GEN,6), deviceNear(FARM,6)];
+  ["ck1","ck2","ck3","ck4"].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.classList.toggle("ok",marks[i]);
+    el.lastElementChild.textContent = marks[i]?"◯":"✕";
+  });
+}
+
+// ---------- 開始 / 終了 ----------
+function startGame(){
+  genWorld(); rebuild();
+  player.x=SIZE/2; player.z=SIZE/2; player.feet=topY(Math.floor(SIZE/2),Math.floor(SIZE/2));
+  player.vy=0; player.yaw=0.6; player.pitch=-0.3;
+  st.hp=10; st.water=85; st.air=90; st.food=80; st.mat=10;
+  day=1; survived=0; over=false; setPhase("calm");
+  document.getElementById("logLines").innerHTML="";
+  addLog("整備率0.02%の現実を、この手で変える");
+  addLog("まずは地面を掘って資材を集めよう");
+  started=true;
+  document.getElementById("intro").style.display="none";
+  document.getElementById("gameover").style.display="none";
+}
+document.getElementById("startBtn").addEventListener("click",startGame);
+document.getElementById("retryBtn").addEventListener("click",startGame);
+
+// ---------- ブログ埋め込み対応（全画面・別タブ） ----------
+document.getElementById("openTab").href = location.href;
+document.getElementById("bFull").addEventListener("click",()=>{
+  try{
+    if(document.fullscreenElement){ document.exitFullscreen(); }
+    else if(document.documentElement.requestFullscreen){
+      document.documentElement.requestFullscreen();
+    } else if(document.documentElement.webkitRequestFullscreen){
+      document.documentElement.webkitRequestFullscreen();
+    } else {
+      window.open(location.href, "_blank"); // iOS等フォールバック
+    }
+  }catch(e){ window.open(location.href, "_blank"); }
+});
+function gameOver(reason){
+  over=true;
+  document.getElementById("goText").textContent=reason+" 生き延びた日数: "+day+"日 / 汚染からの生還: "+survived+"回";
+  document.getElementById("gameover").style.display="flex";
+  if(document.pointerLockElement) document.exitPointerLock();
+}
+
+// ---------- メインループ ----------
+function resize(){
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+}
+addEventListener("resize",resize); resize();
+genWorld(); rebuild();
+
+let last=performance.now(), hudT=0;
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(started && !over){
+    // 移動
+    let mx=0,mz=0;
+    if(keys.KeyW||keys.ArrowUp) mz-=1;
+    if(keys.KeyS||keys.ArrowDown) mz+=1;
+    if(keys.KeyA||keys.ArrowLeft) mx-=1;
+    if(keys.KeyD||keys.ArrowRight) mx+=1;
+    if(keys.Space) jump();
+    mx+=moveVec.x; mz+=moveVec.y;
+    const len=Math.hypot(mx,mz); if(len>1){mx/=len;mz/=len;}
+    const sp=4.2, sin=Math.sin(player.yaw), cos=Math.cos(player.yaw);
+    const dx=(mx*cos-mz*sin)*sp*dt, dz=(mx*-sin-mz*cos)*sp*dt;
+    let nx=Math.max(0.3,Math.min(SIZE-0.3,player.x+dx));
+    let nz=Math.max(0.3,Math.min(SIZE-0.3,player.z+dz));
+    if(topY(Math.floor(nx),Math.floor(player.z))<=player.feet+1.01) player.x=nx;
+    if(topY(Math.floor(player.x),Math.floor(nz))<=player.feet+1.01) player.z=nz;
+    player.vy-=18*dt; player.feet+=player.vy*dt;
+    const g=topY(Math.floor(player.x),Math.floor(player.z));
+    if(player.feet<=g){ player.feet=g; player.vy=0; player.grounded=true; }
+    else player.grounded=false;
+
+    // フェーズ進行
+    phaseT+=dt;
+    if(phase==="calm" && phaseT>PHASE_LEN.calm) setPhase("alert");
+    else if(phase==="alert" && phaseT>PHASE_LEN.alert) setPhase("fallout");
+    else if(phase==="fallout" && phaseT>PHASE_LEN.fallout){
+      survived++; day++;
+      addLog("汚染が晴れた。シェルターが命を守った（生還"+survived+"回目）");
+      if(survived===3) addLog("本物のシェルターが完成しつつある。この調子だ！");
+      setPhase("calm");
+    }
+
+    // 資源の消費と生産
+    const inShelter = roofed();
+    const wG=deviceNear(WATER_GEN,6), aG=deviceNear(AIR_GEN,6),
+          fG=deviceNear(FARM,6), sG=deviceNear(STORAGE,6);
+    const slow = sG?0.6:1;
+    st.water -= 0.45*slow*dt; if(wG) st.water += 1.6*dt;
+    st.food  -= 0.35*slow*dt; if(fG) st.food  += 1.3*dt;
+    if(inShelter){ st.air += (aG? 2.2 : -1.2)*dt; }
+    else { st.air += (phase==="fallout"? -5 : 1.8)*dt; }
+    st.water=Math.min(100,st.water); st.air=Math.min(100,st.air); st.food=Math.min(100,st.food);
+
+    // ダメージ判定
+    let dmg=0;
+    if(phase==="fallout" && !(inShelter&&aG)) dmg+=0.45;
+    if(st.water<=0) dmg+=0.25;
+    if(st.air<=0)   dmg+=0.35;
+    if(st.food<=0)  dmg+=0.2;
+    st.hp-=dmg*dt*2;
+    if(st.hp<=0){
+      gameOver(phase==="fallout" ? "汚染から身を守れなかった。屋根と空気清浄機が必要だった…"
+                                 : "水・空気・食料が尽きた。自給設備の整備が課題だ…");
+    }
+  }
+
+  camera.position.set(player.x, player.feet+1.6, player.z);
+  camera.rotation.set(0,0,0);
+  camera.rotateY(player.yaw);
+  camera.rotateX(player.pitch);
+
+  const p=(started&&!over)?pick():null;
+  if(p){ hl.visible=true; hl.position.set(p.coord[0]+0.5,p.coord[1]+0.5,p.coord[2]+0.5); }
+  else hl.visible=false;
+
+  hudT+=dt;
+  if(hudT>0.3){ hudT=0; updateHUD(); }
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+updateHUD();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
