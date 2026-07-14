@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MINDCRAFT 地下の聖域 v3 〜シェルタービルダー〜</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; }
+  body {
+    font-family:'DotGothic16', sans-serif;
+    background:linear-gradient(180deg,#8fc4ef 0%, #cfe3ee 55%, #9aa88a 100%);
+    color:#fff; user-select:none; -webkit-user-select:none; touch-action:none;
+  }
+  #c { position:absolute; inset:0; display:block; }
+  #tint { position:absolute; inset:0; pointer-events:none; background:transparent; transition:background 1.5s; }
+  #hurt { position:absolute; inset:0; pointer-events:none; background:rgba(200,30,30,.28); opacity:0; transition:opacity .25s; }
+  .panel { background:rgba(24,28,22,.78); border:2px solid rgba(210,220,190,.45); border-radius:4px; padding:6px 10px; }
+
+  #logo { position:absolute; top:8px; left:8px; pointer-events:none; }
+  #logo .en { font-size:22px; letter-spacing:2px; font-weight:bold; color:#fff;
+    text-shadow:2px 2px 0 #33402a, 4px 4px 0 rgba(0,0,0,.35); }
+  #logo .jp { font-size:11px; color:#ffe9c9; text-shadow:1px 1px 0 #33402a; }
+
+  #status { position:absolute; top:58px; left:8px; width:212px; pointer-events:none; font-size:12px; }
+  #hearts { letter-spacing:1px; font-size:12px; margin-bottom:2px; }
+  .bar { height:9px; background:#20261c; border:1px solid rgba(255,255,255,.35); border-radius:2px; overflow:hidden; margin:2px 0 4px; }
+  .bar>i { display:block; height:100%; transition:width .3s; }
+  #wFill { background:linear-gradient(90deg,#2f8fd9,#7fd4ff); }
+  #aFill { background:linear-gradient(90deg,#4fc9a8,#b6ffe6); }
+  #fFill { background:linear-gradient(90deg,#8fb840,#d6f07f); }
+  .barLabel { display:flex; justify-content:space-between; font-size:10.5px; color:#e4eccf; }
+  #matRow { margin-top:2px; color:#ffd98a; font-size:11px; }
+
+  #danger { position:absolute; top:8px; left:50%; transform:translateX(-50%); width:min(300px,50vw); text-align:center; pointer-events:none; }
+  #danger .title { font-size:12px; text-shadow:1px 1px 0 #33402a; margin-bottom:2px; }
+  #dTrack { position:relative; height:16px; border:2px solid rgba(230,235,215,.55); border-radius:3px;
+    background:linear-gradient(90deg,#3a8f5a 0%, #c9862a 50%, #232a5e 100%); overflow:hidden; }
+  #dTrack .labels { position:absolute; inset:0; display:flex; justify-content:space-between; align-items:center;
+    font-size:10px; padding:0 8px; text-shadow:1px 1px 0 rgba(0,0,0,.6); }
+  #dCursor { position:absolute; top:0; bottom:0; width:4px; background:#fff; box-shadow:0 0 6px #ffd; transition:left .8s; }
+  #dayLabel { position:absolute; top:32px; left:50%; transform:translateX(-50%); font-size:11px;
+    color:#fff; text-shadow:1px 1px 0 #33402a; pointer-events:none; white-space:nowrap; }
+
+  #shelterMeter { position:absolute; top:44px; right:8px; width:168px; font-size:11px; pointer-events:none; }
+  #shelterMeter .title { font-size:12px; margin-bottom:2px; }
+  #shelterMeter div.item { display:flex; justify-content:space-between; color:#dfe8ca; }
+  .ok { color:#9df08a !important; }
+
+  #log { position:absolute; left:8px; bottom:8px; width:min(240px,52vw); font-size:11px; pointer-events:none; }
+  #log .title { font-size:12px; margin-bottom:2px; }
+  #logLines div { padding:1px 0 1px 6px; color:#eef4dd; border-left:3px solid #ffd98a; margin:2px 0; }
+
+  #hotbar { position:absolute; right:8px; bottom:8px; display:flex; gap:4px; flex-wrap:wrap;
+    justify-content:flex-end; max-width:46vw; }
+  .slot { width:46px; height:48px; border:2px solid rgba(215,225,195,.5); border-radius:4px;
+    background:rgba(24,28,22,.78); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:8.5px; color:#e8eeda; cursor:pointer; text-align:center; line-height:1.1; }
+  .slot.sel { border-color:#fff; box-shadow:0 0 8px #ffe9a8; background:rgba(72,78,52,.9); }
+  .slot .cube { width:15px; height:15px; border-radius:3px; margin-bottom:1px; box-shadow:inset -3px -3px 0 rgba(0,0,0,.3); }
+  .slot .cost { color:#ffd98a; font-size:8px; }
+
+  #btns { position:absolute; right:8px; bottom:118px; display:flex; gap:8px; }
+  .abtn { width:62px; height:48px; border:2px solid rgba(215,225,195,.6); border-radius:8px;
+    background:rgba(30,34,26,.85); color:#fff; font-family:inherit; font-size:13px; }
+  .abtn:active { background:rgba(140,150,100,.9); }
+
+  #bFull { position:absolute; top:8px; right:8px; z-index:15;
+    font-family:inherit; font-size:11px; padding:5px 9px; border-radius:4px;
+    border:2px solid rgba(215,225,195,.6); background:rgba(30,34,26,.85); color:#fff; cursor:pointer; }
+  #bFull:active { background:rgba(140,150,100,.9); }
+  #openTab { display:inline-block; margin-top:10px; font-size:11px; color:#ffd98a; }
+
+  #cross { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; width:16px; height:16px; }
+  #cross::before,#cross::after { content:""; position:absolute; background:rgba(255,255,255,.9); }
+  #cross::before { left:7px; top:0; width:2px; height:16px; }
+  #cross::after { top:7px; left:0; width:16px; height:2px; }
+
+  #hint { position:absolute; bottom:118px; left:8px; font-size:10.5px;
+    color:#fff; background:rgba(24,28,22,.65); padding:4px 8px; border-radius:4px; pointer-events:none;
+    max-width:52vw; }
+
+  #stick { position:absolute; width:104px; height:104px; border:2px solid rgba(255,255,255,.4); border-radius:50%;
+    background:rgba(255,255,255,.08); display:none; pointer-events:none; }
+  #knob { position:absolute; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.55); left:28px; top:28px; }
+
+  #intro, #gameover { position:absolute; inset:0; background:rgba(14,18,12,.92); z-index:20;
+    display:flex; align-items:center; justify-content:center; padding:14px; overflow:auto; }
+  #introBox { max-width:530px; text-align:center; }
+  #introBox h1 { font-size:26px; letter-spacing:3px; text-shadow:3px 3px 0 #33402a; }
+  #introBox h2 { font-size:13px; color:#ffe9c9; margin:2px 0 12px; }
+  #introBox p { font-size:12.5px; line-height:1.75; color:#e8eeda; text-align:left; margin-bottom:8px; }
+  #introBox .stat { color:#8adf9a; }
+  #introBox ol { text-align:left; font-size:12px; color:#cfe0b8; margin:0 0 14px 20px; line-height:1.65; }
+  #startBtn { font-family:inherit; font-size:16px; padding:12px 32px; border-radius:6px;
+    border:2px solid #ffe9a8; background:#5a6b3a; color:#fff; cursor:pointer; }
+  #startBtn:active { background:#7a8f50; }
+  #gameover { display:none; text-align:center; }
+  @media (max-width:640px){
+    #logo .en{font-size:17px} #logo .jp{font-size:9px}
+    #status{width:170px; top:50px; font-size:11px}
+    #danger{width:44vw} #shelterMeter{display:none}
+    #hint{display:none}
+    #hotbar{max-width:58vw}
+    .slot{width:42px; height:46px; font-size:8px}
+    #introBox h1{font-size:21px} #introBox p{font-size:11.5px}
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="tint"></div>
+<div id="hurt"></div>
+
+<div id="logo"><div class="en">MINDCRAFT</div><div class="jp">地下の聖域 v3 〜シェルタービルダー〜</div></div>
+<button id="bFull">⛶ 全画面</button>
+
+<div id="danger">
+  <div class="title">World Time</div>
+  <div id="dTrack">
+    <div class="labels"><span>昼</span><span>夕暮れ</span><span>夜</span></div>
+    <div id="dCursor"></div>
+  </div>
+</div>
+<div id="dayLabel">1日目 / 昼</div>
+
+<div id="status" class="panel">
+  <div>Sanctuary Status</div>
+  <div id="hearts"></div>
+  <div class="barLabel"><span>水（造水機）</span><span id="wNum"></span></div>
+  <div class="bar"><i id="wFill"></i></div>
+  <div class="barLabel"><span>空気（清浄機）</span><span id="aNum"></span></div>
+  <div class="bar"><i id="aFill"></i></div>
+  <div class="barLabel"><span>食料（栽培棚）</span><span id="fNum"></span></div>
+  <div class="bar"><i id="fFill"></i></div>
+  <div id="matRow">資材: <span id="matNum">12</span>（掘って入手）</div>
+</div>
+
+<div id="shelterMeter" class="panel">
+  <div class="title">聖域の整備状況</div>
+  <div class="item" id="ck1"><span>屋根の下にいる</span><span>✕</span></div>
+  <div class="item" id="ck2"><span>発電機（電力）</span><span>✕</span></div>
+  <div class="item" id="ck3"><span>造水機が稼働</span><span>✕</span></div>
+  <div class="item" id="ck4"><span>空気清浄機が稼働</span><span>✕</span></div>
+  <div class="item" id="ck5"><span>栽培棚が稼働</span><span>✕</span></div>
+  <div class="item" id="ck6"><span>ベッドが近くにある</span><span>✕</span></div>
+</div>
+
+<div id="log" class="panel">
+  <div class="title">Sanctuary Log</div>
+  <div id="logLines"></div>
+</div>
+
+<div id="btns">
+  <button class="abtn" id="bJump">ジャンプ</button>
+  <button class="abtn" id="bBreak">掘る</button>
+  <button class="abtn" id="bPlace">置く</button>
+</div>
+
+<div id="hotbar"></div>
+<div id="cross"></div>
+<div id="hint">クリックで操作開始 / WASD移動 / 左クリック掘る<br>右クリック置く / 1〜7で選択 / Spaceジャンプ</div>
+<div id="stick"><div id="knob"></div></div>
+
+<div id="intro">
+  <div id="introBox" class="panel">
+    <h1>MINDCRAFT</h1>
+    <h2>地下の聖域 v3 〜シェルタービルダー〜</h2>
+    <p>キミは黄色いヘルメットの<span class="stat">シェルタービルダー</span>。
+    白亜の都市の片隅で、爆発する緑の怪物の夜を生き延びるため、
+    地下に「インフラ自立型シェルター」を築く。
+    <span class="stat">空気から水を作る造水機</span>、人工光の<span class="stat">栽培棚</span>、
+    NBC対応<span class="stat">空気清浄機</span>、独立電源の<span class="stat">発電機</span>——
+    昼は秘密基地、夜は最強の聖域だ。</p>
+    <ol>
+      <li>昼は採掘＆ビルの解体で資材集め（壊すと資材が飛び出す）</li>
+      <li>地下や建物内に部屋を作り「装甲壁」で囲う（爆発に耐える）</li>
+      <li>発電機→造水機・清浄機・栽培棚・ベッドの順に設置</li>
+      <li>夜は怪物が爆発攻撃！聖域にこもって生き延びろ</li>
+    </ol>
+    <button id="startBtn">ビルダー出動！</button>
+    <br><a id="openTab" href="#" target="_blank" rel="noopener">画面が小さい場合 → 新しいタブで開く</a>
+  </div>
+</div>
+
+<div id="gameover">
+  <div class="panel" style="padding:22px 26px; max-width:420px">
+    <h1 style="font-size:24px; margin-bottom:8px">聖域は、まだ完成していなかった…</h1>
+    <p id="goText" style="font-size:12.5px; margin-bottom:14px"></p>
+    <button id="retryBtn" class="abtn" style="width:auto; padding:10px 26px; height:auto">もう一度挑戦</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+// ================= 色面スタイルのテクスチャ（32x32・DQB風研究の反映） =================
+function tile(fn){
+  const cv=document.createElement("canvas"); cv.width=cv.height=32;
+  const g=cv.getContext("2d"); fn(g);
+  return new THREE.CanvasTexture(cv); // Linearフィルタで滑らかに
+}
+function shade(g, base, light, dark){ // 面取り風のエッジ陰影
+  g.fillStyle=base; g.fillRect(0,0,32,32);
+  g.globalAlpha=0.45; g.fillStyle=light;
+  g.fillRect(0,0,32,3); g.fillRect(0,0,3,32);
+  g.fillStyle=dark; g.fillRect(0,29,32,3); g.fillRect(29,0,3,32);
+  g.globalAlpha=1;
+}
+function blob(g, col, n, a){ // ノイズではなく大きな色面パッチ
+  g.globalAlpha=a||0.13; g.fillStyle=col;
+  for(let i=0;i<n;i++){
+    const x=(Math.random()*26)|0, y=(Math.random()*26)|0, w=5+((Math.random()*7)|0);
+    g.fillRect(x,y,w,Math.max(3,w-3));
+  }
+  g.globalAlpha=1;
+}
+const T = {
+  grassTop: tile(g=>{ shade(g,"#66b64c","#8fd870","#3f8a30"); blob(g,"#8fd870",5); blob(g,"#478f34",4); }),
+  grassSide: tile(g=>{ shade(g,"#96754f","#b8956a","#6e5236");
+    g.fillStyle="#66b64c"; g.fillRect(0,0,32,8);
+    g.globalAlpha=0.5; g.fillStyle="#8fd870"; g.fillRect(0,0,32,3); g.globalAlpha=1;
+    g.fillStyle="#478f34"; g.fillRect(0,8,32,2); }),
+  dirt: tile(g=>{ shade(g,"#96754f","#b8956a","#6e5236"); blob(g,"#7e5f3e",5); blob(g,"#ab8a60",4); }),
+  stone: tile(g=>{ shade(g,"#8b93a0","#adb5c2","#646c78"); blob(g,"#79818e",5); blob(g,"#9aa2b0",3); }),
+  armor: tile(g=>{ shade(g,"#c0c4cc","#e2e6ee","#8a8e98");
+    g.globalAlpha=0.6; g.fillStyle="#9aa0aa";
+    g.fillRect(0,15,32,2); g.fillRect(15,0,2,32); g.globalAlpha=1;
+    g.fillStyle="#7a808a"; [[4,4],[26,4],[4,26],[26,26]].forEach(p=>g.fillRect(p[0],p[1],2,2)); }),
+  white: tile(g=>{ shade(g,"#efece5","#ffffff","#c8c4b8"); blob(g,"#f8f6f0",3,0.3); }),
+  window: tile(g=>{ shade(g,"#efece5","#ffffff","#c8c4b8");
+    g.fillStyle="#5a6068"; g.fillRect(4,4,24,24);
+    const gr=g.createLinearGradient(0,5,0,27);
+    gr.addColorStop(0,"#bfe2f2"); gr.addColorStop(0.55,"#7fb8d8"); gr.addColorStop(1,"#5a94b8");
+    g.fillStyle=gr; g.fillRect(6,6,20,20);
+    g.globalAlpha=0.55; g.fillStyle="#fff"; g.beginPath();
+    g.moveTo(6,14); g.lineTo(14,6); g.lineTo(19,6); g.lineTo(6,19); g.fill(); g.globalAlpha=1; }),
+  road: tile(g=>{ shade(g,"#5b5d63","#7a7c82","#3f4146"); blob(g,"#4d4f55",4);
+    g.fillStyle="#d8d8c4"; g.fillRect(14,4,4,9); g.fillRect(14,19,4,9); }),
+  gen: tile(g=>{ shade(g,"#eabd42","#ffe084","#b8892a");
+    g.fillStyle="#3a3a3a"; g.fillRect(0,24,32,8);
+    g.fillStyle="#fff"; g.beginPath();
+    g.moveTo(18,4); g.lineTo(12,14); g.lineTo(16,14); g.lineTo(13,22); g.lineTo(21,11); g.lineTo(16,11); g.closePath(); g.fill(); }),
+  water: tile(g=>{ shade(g,"#54bce4","#9adcf2","#2a86ac");
+    g.fillStyle="#eafaff"; g.beginPath(); g.arc(16,15,6,0,7); g.fill();
+    g.beginPath(); g.moveTo(16,4); g.lineTo(11,13); g.lineTo(21,13); g.closePath(); g.fill();
+    g.fillStyle="#2a86ac"; g.fillRect(0,27,32,5); }),
+  air: tile(g=>{ shade(g,"#d4f0d8","#f0fff2","#8ec49a");
+    g.fillStyle="#4a7a56"; g.fillRect(6,8,20,3); g.fillRect(6,15,20,3); g.fillRect(6,22,20,3);
+    g.fillStyle="#3f8f5f"; g.fillRect(0,0,32,4); }),
+  farm: tile(g=>{ shade(g,"#84603c","#a8845a","#5c4228");
+    g.fillStyle="#4a3222"; g.fillRect(0,12,32,4); g.fillRect(0,28,32,4);
+    g.fillStyle="#5ec84e"; [[4,2],[13,3],[22,2]].forEach(p=>{ g.fillRect(p[0],p[1],5,9); });
+    g.fillStyle="#8fe07a"; [[5,2],[14,3],[23,2]].forEach(p=>g.fillRect(p[0],p[1],2,5)); }),
+  bed: tile(g=>{ shade(g,"#d4626f","#f08a96","#a03a4a");
+    g.fillStyle="#f4f1e8"; g.fillRect(0,0,32,10);
+    g.globalAlpha=0.4; g.fillStyle="#c8c4b8"; g.fillRect(0,8,32,2); g.globalAlpha=1;
+    g.fillStyle="#a03a4a"; g.fillRect(0,24,32,3); }),
+  crate: tile(g=>{ shade(g,"#bd8a52","#dcae74","#8a5f34");
+    g.fillStyle="#8a5f34"; g.fillRect(0,0,32,4); g.fillRect(0,28,32,4); g.fillRect(0,0,4,32); g.fillRect(28,0,4,32);
+    g.strokeStyle="#7a5330"; g.lineWidth=3;
+    g.beginPath(); g.moveTo(4,4); g.lineTo(28,28); g.moveTo(28,4); g.lineTo(4,28); g.stroke(); }),
+  log: tile(g=>{ shade(g,"#84603c","#a8845a","#5c4228");
+    g.globalAlpha=0.5; g.fillStyle="#6a4c2c";
+    g.fillRect(7,0,3,32); g.fillRect(17,0,2,32); g.fillRect(25,0,3,32); g.globalAlpha=1; }),
+  leaf: tile(g=>{ shade(g,"#529f3f","#7cc964","#356e28"); blob(g,"#6ab853",6); blob(g,"#3f8a30",5); })
+};
+
+// ================= ブロック定義 =================
+const TYPES = [
+  { name:"草原",       sw:"#5cae43", cost:1, yield:1 },
+  { name:"大地",       sw:"#8a6a48", cost:1, yield:2 },
+  { name:"岩盤",       sw:"#7d8590", cost:1, yield:3 },
+  { name:"装甲壁",     sw:"#b4b8c0", cost:2, yield:1 },
+  { name:"発電機",     sw:"#e8b83a", cost:6, yield:2 },
+  { name:"造水機",     sw:"#4fb8e0", cost:6, yield:2 },
+  { name:"空気清浄機", sw:"#cdeccd", cost:6, yield:2 },
+  { name:"栽培棚",     sw:"#8fe05a", cost:5, yield:2 },
+  { name:"ベッド",     sw:"#e06a7a", cost:3, yield:1 },
+  { name:"備蓄庫",     sw:"#d8a24f", cost:4, yield:2 },
+  { name:"白壁",       sw:"#eceae4", cost:2, yield:2 },
+  { name:"窓ガラス壁", sw:"#7fb8d8", cost:2, yield:2 },
+  { name:"道路",       sw:"#55575c", cost:1, yield:2 },
+  { name:"原木",       sw:"#7a5a34", cost:1, yield:2 },
+  { name:"葉",         sw:"#4d9c3c", cost:1, yield:1 }
+];
+const GEN=4, WATER_GEN=5, AIR_GEN=6, FARM=7, BED=8, STORAGE=9;
+const DEVICE_TYPES = [GEN, WATER_GEN, AIR_GEN, FARM, BED, STORAGE];
+const HOTBAR = [3,4,5,6,7,8,9];
+// 爆発で壊れる自然ブロック（装甲壁・建材・岩盤は耐える）
+const FRAGILE = [0,1,13,14];
+
+function lam(t,extra){ return new THREE.MeshLambertMaterial(Object.assign({map:t},extra||{})); }
+const grassMats = [lam(T.grassSide),lam(T.grassSide),lam(T.grassTop),lam(T.dirt),lam(T.grassSide),lam(T.grassSide)];
+const mats = [
+  null, lam(T.dirt), lam(T.stone), lam(T.armor),
+  lam(T.gen,{emissive:0x554010}), lam(T.water,{emissive:0x103a55}),
+  lam(T.air,{emissive:0x1a4028}), lam(T.farm,{emissive:0x1a3510}),
+  lam(T.bed), lam(T.crate),
+  lam(T.white), lam(T.window,{emissive:0x18242c}), lam(T.road),
+  lam(T.log), lam(T.leaf)
+];
+function matFor(t){ return t===0 ? grassMats : mats[t]; }
+
+// ================= ワールド生成（白い都市＋自然） =================
+const SIZE = 28, MAXH = 15, CITY_X = 14; // x<14が都市、x>=14が自然
+let world;
+const K = (x,y,z)=>x+","+y+","+z;
+function addBuilding(x0,z0,w,d,h){
+  const gy=5;
+  for(let y=gy;y<gy+h;y++)
+    for(let x=x0;x<x0+w;x++) for(let z=z0;z<z0+d;z++){
+      if(x===x0||x===x0+w-1||z===z0||z===z0+d-1)
+        world.set(K(x,y,z), ((y-gy)%2===1)?11:10);
+    }
+  for(let x=x0;x<x0+w;x++) for(let z=z0;z<z0+d;z++) world.set(K(x,gy+h,z),10);
+  const dx=x0+((w/2)|0); // 入口
+  world.delete(K(dx,gy,z0)); world.delete(K(dx,gy+1,z0));
+}
+function addTree(x,z){
+  let h=0; for(let y=MAXH;y>=0;y--) if(world.has(K(x,y,z))){h=y+1;break;}
+  for(let y=h;y<h+3;y++) world.set(K(x,y,z),13);
+  for(let dx=-1;dx<=1;dx++) for(let dz=-1;dz<=1;dz++)
+    for(let y=h+2;y<h+4;y++) if(!(dx===0&&dz===0&&y<h+3)) world.set(K(x+dx,y,z+dz),14);
+  world.set(K(x,h+4,z),14);
+}
+function genWorld(){
+  world = new Map();
+  for(let x=0;x<SIZE;x++) for(let z=0;z<SIZE;z++){
+    let h;
+    if(x<CITY_X) h=5;
+    else { h = 6 + Math.round(Math.sin(x*0.5)*0.9 + Math.cos(z*0.4)*0.9); h=Math.max(5,Math.min(8,h)); }
+    for(let y=0;y<h;y++) world.set(K(x,y,z), y===h-1 ? 0 : (y>=h-3 ? 1 : 2));
+  }
+  // 道路網
+  for(let x=0;x<CITY_X;x++){ [6,14,21].forEach(z=>world.set(K(x,4,z),12)); }
+  for(let z=0;z<SIZE;z++){ world.set(K(4,4,z),12); world.set(K(13,4,z),12); }
+  // 白いビル群
+  addBuilding(1,1,3,4,6);  addBuilding(6,1,3,4,5);  addBuilding(10,1,3,4,7);
+  addBuilding(1,8,3,5,5);  addBuilding(6,8,4,5,9);  addBuilding(11,8,2,4,4);
+  addBuilding(1,16,3,4,6); addBuilding(6,16,3,4,5); addBuilding(10,16,3,4,6);
+  addBuilding(1,23,3,4,5); addBuilding(6,23,3,4,7); addBuilding(10,23,3,4,4);
+  // 中央タワー屋上のヘリポート（緑パッド）
+  world.set(K(7,14,10),0); world.set(K(8,14,10),0); world.set(K(7,14,11),0); world.set(K(8,14,11),0);
+  // 自然エリアの木
+  [[17,4],[22,9],[16,15],[24,20],[19,24],[25,3],[21,26]].forEach(p=>addTree(p[0],p[1]));
+}
+
+// ================= Three.js =================
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:false});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xc5d8e2, 22, 60);
+const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 120);
+const amb = new THREE.HemisphereLight(0xdfeaf2, 0x8a7a5a, 0.85); scene.add(amb);
+const sun = new THREE.DirectionalLight(0xfff4dc, 0.9);
+sun.position.set(0.5,1,0.35); scene.add(sun);
+
+// ---- 面取りブロック（DQB風ベベル・角に光が乗る） ----
+function roundedBox(radius){
+  const geo = new THREE.BoxGeometry(1,1,1,2,2,2);
+  const pos = geo.attributes.position;
+  const inner = 0.5 - radius;
+  const v = new THREE.Vector3(), cl = new THREE.Vector3();
+  for(let i=0;i<pos.count;i++){
+    v.fromBufferAttribute(pos,i);
+    cl.set(
+      Math.max(-inner, Math.min(inner, v.x)),
+      Math.max(-inner, Math.min(inner, v.y)),
+      Math.max(-inner, Math.min(inner, v.z)));
+    const dx=v.x-cl.x, dy=v.y-cl.y, dz=v.z-cl.z;
+    const dl=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    if(dl>1e-6){ v.set(cl.x+dx/dl*radius, cl.y+dy/dl*radius, cl.z+dz/dl*radius); }
+    pos.setXYZ(i, v.x,v.y,v.z);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+const box = roundedBox(0.07);
+let meshes = [];
+let devices = {};
+const NB = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+function rebuild(){
+  meshes.forEach(m=>scene.remove(m));
+  meshes = [];
+  devices = {}; DEVICE_TYPES.forEach(t=>devices[t]=[]);
+  const byType = TYPES.map(()=>[]);
+  world.forEach((t,key)=>{
+    const [x,y,z] = key.split(",").map(Number);
+    if(devices[t]) devices[t].push([x,y,z]);
+    for(const n of NB){
+      if(!world.has(K(x+n[0],y+n[1],z+n[2]))){ byType[t].push([x,y,z]); break; }
+    }
+  });
+  const m4 = new THREE.Matrix4();
+  byType.forEach((list,t)=>{
+    if(!list.length) return;
+    const im = new THREE.InstancedMesh(box, matFor(t), list.length);
+    list.forEach((p,i)=>{ m4.setPosition(p[0]+0.5,p[1]+0.5,p[2]+0.5); im.setMatrixAt(i,m4); });
+    im.userData.type=t; im.userData.coords=list;
+    scene.add(im); meshes.push(im);
+  });
+}
+const hl = new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(1.02,1.02,1.02)),
+  new THREE.LineBasicMaterial({color:0xffffff}));
+hl.visible=false; scene.add(hl);
+
+// 雲
+const clouds=[];
+const cloudMat=new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.75});
+[[5,3],[15,12],[22,20],[9,24]].forEach(p=>{
+  const c=new THREE.Mesh(new THREE.BoxGeometry(5,0.4,3), cloudMat);
+  c.position.set(p[0],17,p[1]); scene.add(c); clouds.push(c);
+});
+
+// ================= 物理（v2で全面刷新） =================
+function groundY(cx,cz,feet){
+  if(cx<0||cz<0||cx>=SIZE||cz>=SIZE) return 0;
+  for(let y=Math.min(MAXH,Math.floor(feet+0.01)); y>=0; y--)
+    if(world.has(K(cx,y,cz))) return y+1;
+  return 0;
+}
+const player = { x:17, z:11, feet:9, vy:0, yaw:2.2, pitch:-0.35, grounded:false, rot:2.2 };
+function tryAxis(nx,nz){
+  const cx=Math.floor(nx), cz=Math.floor(nz);
+  if(cx<0||cz<0||cx>=SIZE||cz>=SIZE) return false;
+  const y0=Math.floor(player.feet+0.05);
+  const b0=world.has(K(cx,y0,cz));
+  const bH=world.has(K(cx,Math.floor(player.feet+1.7),cz));
+  if(!b0&&!bH) return true;
+  if(b0&&!bH&&player.grounded
+     && !world.has(K(cx,y0+1,cz)) && !world.has(K(cx,y0+2,cz))){
+    player.feet=y0+1; return true; // 1段ステップアップ
+  }
+  return false;
+}
+function roofed(){
+  const cx=Math.floor(player.x), cz=Math.floor(player.z);
+  for(let y=Math.floor(player.feet)+2;y<=MAXH;y++) if(world.has(K(cx,y,cz))) return true;
+  return false;
+}
+function deviceNear(type, r){
+  const px=player.x, py=player.feet+1, pz=player.z, r2=r*r;
+  const list = devices[type]||[];
+  for(let i=0;i<list.length;i++){
+    const dx=list[i][0]+0.5-px, dy=list[i][1]+0.5-py, dz=list[i][2]+0.5-pz;
+    if(dx*dx+dy*dy+dz*dz < r2) return true;
+  }
+  return false;
+}
+
+// ================= キャラクター＆モブ（マルチパーツモデル） =================
+function mobTex(fn){ const t=tile(fn); t.magFilter=THREE.NearestFilter; return t; }
+const creeperSkin = lam(mobTex(g=>{ shade(g,"#57b53f","#82d968","#37822a"); blob(g,"#4a9e34",5); }));
+const creeperFace = lam(mobTex(g=>{ shade(g,"#57b53f","#82d968","#37822a");
+  g.fillStyle="#0e0e0e";
+  g.fillRect(6,8,6,6); g.fillRect(20,8,6,6);
+  g.fillRect(12,16,8,6); g.fillRect(10,20,4,8); g.fillRect(18,20,4,8); }));
+const pigSkin = lam(mobTex(g=>{ shade(g,"#eda0ae","#ffc4ce","#c9788a"); }));
+const pigFace = lam(mobTex(g=>{ shade(g,"#eda0ae","#ffc4ce","#c9788a");
+  g.fillStyle="#111"; g.fillRect(6,8,4,4); g.fillRect(22,8,4,4);
+  g.fillStyle="#d9758a"; g.fillRect(10,16,12,8);
+  g.fillStyle="#8a3a4a"; g.fillRect(12,18,3,4); g.fillRect(18,18,3,4); }));
+const sheepSkin = lam(mobTex(g=>{ shade(g,"#f2efe6","#ffffff","#ccc8bc"); blob(g,"#e2ded2",6,0.3); }));
+const sheepFace = lam(mobTex(g=>{ shade(g,"#dcc8b0","#f0ddc8","#b89a80");
+  g.fillStyle="#111"; g.fillRect(6,10,4,4); g.fillRect(22,10,4,4);
+  g.fillStyle="#b89a80"; g.fillRect(12,20,8,6); }));
+function faced(skin,face){ return [skin,skin,skin,skin,face,skin]; } // +z面が顔
+
+// ---- 主人公「シェルタービルダー」（三人称・歩行アニメ付き） ----
+const faceTexP = lam(mobTex(g=>{ shade(g,"#f2c9a0","#ffe0bc","#d8a878");
+  g.fillStyle="#2a2a2a"; g.fillRect(8,13,5,5); g.fillRect(19,13,5,5);
+  g.fillStyle="#fff"; g.fillRect(9,14,2,2); g.fillRect(20,14,2,2);
+  g.fillStyle="#c9765a"; g.fillRect(13,22,6,3); }));
+const skinMat = lam(mobTex(g=>{ shade(g,"#f2c9a0","#ffe0bc","#d8a878"); }));
+const vestMat = lam(mobTex(g=>{ shade(g,"#f08a2a","#ffb060","#c06414");
+  g.fillStyle="#e8e8e0"; g.fillRect(0,8,32,4); g.fillRect(0,20,32,4); }));
+const pantsMat = lam(mobTex(g=>{ shade(g,"#3a4a6a","#5a6c92","#242e46"); }));
+const helmetMat = lam(mobTex(g=>{ shade(g,"#f2c832","#ffe884","#c09a1a"); }));
+const playerParts = {};
+function makePlayer(){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.6,0.3), vestMat);
+  body.position.y=0.95; g.add(body);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(0.45,0.42,0.45), faced(skinMat,faceTexP));
+  head.position.y=1.47; g.add(head);
+  const helmet=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.2,0.52), helmetMat);
+  helmet.position.y=1.72; g.add(helmet);
+  const brim=new THREE.Mesh(new THREE.BoxGeometry(0.56,0.06,0.62), helmetMat);
+  brim.position.set(0,1.63,0.05); g.add(brim);
+  function limb(w,h,d,mat,px,py){
+    const pivot=new THREE.Group(); pivot.position.set(px,py,0);
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+    m.position.y=-h/2; pivot.add(m); g.add(pivot);
+    return pivot;
+  }
+  playerParts.armL=limb(0.16,0.55,0.2, skinMat,-0.34,1.22);
+  playerParts.armR=limb(0.16,0.55,0.2, skinMat, 0.34,1.22);
+  playerParts.legL=limb(0.2,0.65,0.22, pantsMat,-0.14,0.65);
+  playerParts.legR=limb(0.2,0.65,0.22, pantsMat, 0.14,0.65);
+  return g;
+}
+const playerMesh = makePlayer(); scene.add(playerMesh);
+let walkT=0, moving=false;
+
+function makeCreeper(){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.8,0.32), creeperSkin);
+  body.position.y=0.55; g.add(body);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.55,0.55), faced(creeperSkin,creeperFace));
+  head.position.y=1.22; g.add(head);
+  [[-0.16,-0.22],[0.16,-0.22],[-0.16,0.22],[0.16,0.22]].forEach(p=>{
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.3,0.24), creeperSkin);
+    leg.position.set(p[0],0.15,p[1]); g.add(leg);
+  });
+  return g;
+}
+function makeAnimal(kind){
+  const skin = kind==="pig"?pigSkin:sheepSkin;
+  const face = kind==="pig"?pigFace:sheepFace;
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.5,0.95), skin);
+  body.position.y=0.55; g.add(body);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(0.45,0.45,0.4), faced(skin,face));
+  head.position.set(0,0.75,0.62); g.add(head);
+  [[-0.18,-0.3],[0.18,-0.3],[-0.18,0.3],[0.18,0.3]].forEach(p=>{
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.32,0.16), skin);
+    leg.position.set(p[0],0.16,p[1]); g.add(leg);
+  });
+  return g;
+}
+let mobs=[]; // 夜の敵
+const passives=[]; // 動物
+function mobGroundOK(m,nx,nz){
+  const cx=Math.floor(nx), cz=Math.floor(nz);
+  if(cx<0||cz<0||cx>=SIZE||cz>=SIZE) return null;
+  const g=groundY(cx,cz,m.y+1.1);
+  if(g>m.y+1.01) return null;
+  return g;
+}
+function spawnCreeper(){
+  if(mobs.length>=5) return;
+  const edge=(Math.random()*4)|0;
+  let x,z;
+  if(edge===0){x=1;z=1+Math.random()*(SIZE-2);}
+  else if(edge===1){x=SIZE-1.5;z=1+Math.random()*(SIZE-2);}
+  else if(edge===2){z=1;x=1+Math.random()*(SIZE-2);}
+  else {z=SIZE-1.5;x=1+Math.random()*(SIZE-2);}
+  const mesh=makeCreeper();
+  const y=groundY(Math.floor(x),Math.floor(z),MAXH+0.9);
+  mesh.position.set(x,y,z); scene.add(mesh);
+  mobs.push({x,z,y,mesh,fuse:0});
+}
+function clearMobs(){ mobs.forEach(m=>scene.remove(m.mesh)); mobs=[]; }
+function initPassives(){
+  passives.forEach(p=>scene.remove(p.mesh)); passives.length=0;
+  [["pig",17,5],["pig",22,18],["sheep",25,9]].forEach(a=>{
+    const mesh=makeAnimal(a[0]);
+    const y=groundY(a[1],a[2],MAXH+0.9);
+    mesh.position.set(a[1]+0.5,y,a[2]+0.5); scene.add(mesh);
+    passives.push({x:a[1]+0.5,z:a[2]+0.5,y,mesh,dir:Math.random()*6.28,t:0,next:2});
+  });
+}
+
+// ---- 破壊パーティクル＆ドロップ吸い込み（DQB風演出） ----
+const pGeo = new THREE.BoxGeometry(0.12,0.12,0.12);
+let fx=[];
+function dropMat(t){ return t===0 ? grassMats[2] : mats[t]; }
+function burst(x,y,z,type){
+  const m0 = dropMat(type);
+  for(let i=0;i<7;i++){
+    const m=new THREE.Mesh(pGeo, m0);
+    m.position.set(x,y,z); scene.add(m);
+    fx.push({m, vx:(Math.random()-0.5)*4.5, vy:2+Math.random()*3.5, vz:(Math.random()-0.5)*4.5, t:0, kind:"p"});
+  }
+  const d=new THREE.Mesh(box, m0);
+  d.scale.setScalar(0.26);
+  d.position.set(x,y,z); scene.add(d);
+  fx.push({m:d, vx:0, vy:3.2, vz:0, t:0, kind:"d"});
+}
+const dropTgt = new THREE.Vector3();
+function updateFx(dt){
+  for(let i=fx.length-1;i>=0;i--){
+    const f=fx[i]; f.t+=dt;
+    if(f.kind==="p"){
+      f.vy-=18*dt;
+      f.m.position.x+=f.vx*dt; f.m.position.y+=f.vy*dt; f.m.position.z+=f.vz*dt;
+      f.m.rotation.x+=6*dt; f.m.rotation.y+=5*dt;
+      if(f.t>0.55){ scene.remove(f.m); fx.splice(i,1); }
+    } else {
+      if(f.t<0.28){ f.vy-=14*dt; f.m.position.y+=f.vy*dt; f.m.rotation.y+=8*dt; }
+      else {
+        dropTgt.set(player.x, player.feet+1.1, player.z);
+        f.m.position.lerp(dropTgt, Math.min(1, 10*dt));
+        f.m.rotation.y+=10*dt;
+        if(f.m.position.distanceTo(dropTgt)<0.35 || f.t>1.2){ scene.remove(f.m); fx.splice(i,1); }
+      }
+    }
+  }
+}
+
+// 爆発（装甲壁・建材・岩盤は耐える）
+function explode(mx,my,mz){
+  let armored=false, broke=false;
+  for(let dx=-2;dx<=2;dx++)for(let dy=-2;dy<=2;dy++)for(let dz=-2;dz<=2;dz++){
+    if(dx*dx+dy*dy+dz*dz>3.3) continue;
+    const x=Math.floor(mx)+dx, y=Math.floor(my)+dy, z=Math.floor(mz)+dz;
+    if(y<=0) continue;
+    const t=world.get(K(x,y,z));
+    if(t===undefined) continue;
+    if(FRAGILE.includes(t)){ world.delete(K(x,y,z)); broke=true;
+      if(Math.random()<0.4) burst(x+0.5,y+0.5,z+0.5,t); }
+    else armored=true;
+  }
+  if(broke||armored) rebuild();
+  const ddx=player.x-mx, ddy=(player.feet+1)-my, ddz=player.z-mz;
+  const d2=ddx*ddx+ddy*ddy+ddz*ddz;
+  if(d2<9){ st.hp-=3*(1-Math.sqrt(d2)/3.2); flashHurt(); }
+  addLog(armored ? "ドカーン！装甲壁が爆発に耐えた！" : "ドカーン！怪物が爆発し、大地が吹き飛んだ！");
+}
+
+// ================= 入力 =================
+const keys = {};
+addEventListener("keydown",e=>{ keys[e.code]=true;
+  if(e.code.startsWith("Digit")){ const n=+e.code.slice(5); if(n>=1&&n<=HOTBAR.length) selectSlot(n-1); } });
+addEventListener("keyup",e=>keys[e.code]=false);
+let locked=false;
+canvas.addEventListener("click",()=>{ if(started && !isTouch && !locked) canvas.requestPointerLock(); });
+document.addEventListener("pointerlockchange",()=>{ locked=document.pointerLockElement===canvas;
+  const h=document.getElementById("hint"); if(h) h.style.display=locked?"none":""; });
+addEventListener("mousemove",e=>{
+  if(!locked) return;
+  player.yaw -= e.movementX*0.0025;
+  player.pitch = Math.max(-1.25, Math.min(0.6, player.pitch - e.movementY*0.0025));
+});
+canvas.addEventListener("mousedown",e=>{ if(!locked) return;
+  if(e.button===0) doBreak(); else if(e.button===2) doPlace(); });
+canvas.addEventListener("contextmenu",e=>e.preventDefault());
+
+const isTouch = matchMedia("(pointer:coarse)").matches;
+if(!isTouch) document.getElementById("btns").style.display="none";
+const stick=document.getElementById("stick"), knob=document.getElementById("knob");
+let moveId=null, lookId=null, moveVec={x:0,y:0}, origin={x:0,y:0}, lastLook={x:0,y:0};
+canvas.addEventListener("touchstart",e=>{
+  for(const t of e.changedTouches){
+    if(t.clientX<innerWidth/2 && moveId===null){
+      moveId=t.identifier; origin={x:t.clientX,y:t.clientY};
+      stick.style.display="block";
+      stick.style.left=(t.clientX-52)+"px"; stick.style.top=(t.clientY-52)+"px";
+    } else if(lookId===null){ lookId=t.identifier; lastLook={x:t.clientX,y:t.clientY}; }
+  }
+  e.preventDefault();
+},{passive:false});
+canvas.addEventListener("touchmove",e=>{
+  for(const t of e.changedTouches){
+    if(t.identifier===moveId){
+      let dx=t.clientX-origin.x, dy=t.clientY-origin.y;
+      const len=Math.hypot(dx,dy), max=44;
+      if(len>max){ dx=dx/len*max; dy=dy/len*max; }
+      moveVec={x:dx/max,y:dy/max};
+      knob.style.left=(28+dx)+"px"; knob.style.top=(28+dy)+"px";
+    } else if(t.identifier===lookId){
+      player.yaw -= (t.clientX-lastLook.x)*0.0055;
+      player.pitch = Math.max(-1.25, Math.min(0.6, player.pitch-(t.clientY-lastLook.y)*0.0055));
+      lastLook={x:t.clientX,y:t.clientY};
+    }
+  }
+  e.preventDefault();
+},{passive:false});
+function endTouch(e){
+  for(const t of e.changedTouches){
+    if(t.identifier===moveId){ moveId=null; moveVec={x:0,y:0}; stick.style.display="none"; knob.style.left="28px"; knob.style.top="28px"; }
+    if(t.identifier===lookId) lookId=null;
+  }
+}
+canvas.addEventListener("touchend",endTouch);
+canvas.addEventListener("touchcancel",endTouch);
+document.getElementById("bJump").addEventListener("touchstart",e=>{e.preventDefault(); jump();});
+document.getElementById("bBreak").addEventListener("touchstart",e=>{e.preventDefault(); doBreak();});
+document.getElementById("bPlace").addEventListener("touchstart",e=>{e.preventDefault(); doPlace();});
+function jump(){ if(player.grounded){ player.vy=7; player.grounded=false; } }
+
+// ================= 掘る / 置く =================
+const ray = new THREE.Raycaster(); ray.far=11;
+function pick(){
+  ray.setFromCamera({x:0,y:0}, camera);
+  const hits = ray.intersectObjects(meshes, false);
+  if(!hits.length) return null;
+  const h = hits[0];
+  const hx=player.x, hy=player.feet+1.4, hz=player.z;
+  const dx=h.point.x-hx, dy=h.point.y-hy, dz=h.point.z-hz;
+  if(dx*dx+dy*dy+dz*dz > 38) return null; // ビルダーの手が届く範囲(約6.2m)
+  return { coord:h.object.userData.coords[h.instanceId], type:h.object.userData.type, normal:h.face.normal };
+}
+function doBreak(){
+  if(!started||over) return;
+  const p = pick(); if(!p) return;
+  const [x,y,z]=p.coord;
+  if(y===0){ addLog("岩盤の底だ。これ以上は掘れない"); return; }
+  world.delete(K(x,y,z)); rebuild();
+  burst(x+0.5,y+0.5,z+0.5,p.type);
+  st.mat += TYPES[p.type].yield;
+  if(DEVICE_TYPES.includes(p.type)) addLog(TYPES[p.type].name+"を回収した");
+  else if(p.type===10||p.type===11) { if(Math.random()<0.3) addLog("都市の資材を回収した"); }
+}
+function doPlace(){
+  if(!started||over) return;
+  const p = pick(); if(!p) return;
+  const t = HOTBAR[sel];
+  if(st.mat < TYPES[t].cost){ addLog("資材が足りない！昼のうちに掘って集めよう"); return; }
+  const nx=p.coord[0]+Math.round(p.normal.x),
+        ny=p.coord[1]+Math.round(p.normal.y),
+        nz=p.coord[2]+Math.round(p.normal.z);
+  if(nx<0||nz<0||nx>=SIZE||nz>=SIZE||ny<0||ny>MAXH) return;
+  if(world.has(K(nx,ny,nz))) return;
+  const px=Math.floor(player.x), pz=Math.floor(player.z);
+  if(nx===px&&nz===pz&&ny>=Math.floor(player.feet)&&ny<Math.floor(player.feet)+2) return;
+  world.set(K(nx,ny,nz), t); rebuild();
+  st.mat -= TYPES[t].cost;
+  if(t===GEN) addLog("発電機を設置。オフグリッド独立電源が稼働開始！");
+  else if(t===WATER_GEN) addLog("造水機を設置。空気中の水分から飲料水を生成");
+  else if(t===AIR_GEN) addLog("空気清浄機を設置。NBC対応フィルター準備完了");
+  else if(t===FARM) addLog("栽培棚を設置。人工光で野菜が青々と育つ");
+  else if(t===BED) addLog("ふかふかのベッドを設置。ここでなら安心して眠れる");
+  else if(t===STORAGE) addLog("備蓄庫を設置。防災食とワインを大切に貯蔵");
+}
+
+// ================= ホットバー =================
+let sel=0;
+const hotbar=document.getElementById("hotbar");
+HOTBAR.forEach((t,i)=>{
+  const d=document.createElement("div");
+  d.className="slot";
+  d.innerHTML='<div class="cube" style="background:'+TYPES[t].sw+'"></div>'
+    + TYPES[t].name + '<span class="cost">資材'+TYPES[t].cost+'</span>';
+  d.addEventListener("pointerdown",e=>{ e.stopPropagation(); selectSlot(i); });
+  hotbar.appendChild(d);
+});
+function selectSlot(i){ sel=i; [...hotbar.children].forEach((el,j)=>el.classList.toggle("sel",j===i)); }
+selectSlot(0);
+
+// ================= ゲーム状態 =================
+const st = { hp:10, hpMax:10, water:85, air:90, food:80, mat:12 };
+let phase="day", phaseT=0, day=1, survived=0, started=false, over=false, mobT=0;
+const PHASE_LEN = { day:48, dusk:10, night:28 };
+function addLog(msg){
+  const lines=document.getElementById("logLines");
+  const d=document.createElement("div"); d.textContent=msg;
+  lines.prepend(d);
+  while(lines.children.length>3) lines.removeChild(lines.lastChild);
+}
+const tint=document.getElementById("tint");
+const hurtEl=document.getElementById("hurt");
+let hurtT=0;
+function flashHurt(){ hurtEl.style.opacity=1; hurtT=0.3; }
+function setPhase(p){
+  phase=p; phaseT=0;
+  if(p==="day"){
+    tint.style.background="transparent";
+    amb.intensity=0.85; sun.intensity=0.9; scene.fog.color.setHex(0xbfd4e0);
+  } else if(p==="dusk"){
+    tint.style.background="rgba(230,140,40,.16)";
+    amb.intensity=0.6; sun.intensity=0.5; scene.fog.color.setHex(0xc99a6a);
+    addLog("日が沈む…怪物が湧き出す前に聖域へ！");
+  } else {
+    tint.style.background="rgba(12,16,50,.42)";
+    amb.intensity=0.4; sun.intensity=0.16; scene.fog.color.setHex(0x2a3050);
+    mobT=4;
+    addLog("夜になった。緑の怪物の気配…爆発に注意！");
+  }
+}
+
+// ================= HUD =================
+function updateHUD(){
+  let h=""; for(let i=0;i<st.hpMax;i++) h += i<Math.ceil(st.hp)?"❤":"🖤";
+  document.getElementById("hearts").textContent=h;
+  const set=(id,v)=>{ document.getElementById(id+"Fill").style.width=Math.max(0,v)+"%";
+    document.getElementById(id+"Num").textContent=Math.max(0,Math.round(v)); };
+  set("w",st.water); set("a",st.air); set("f",st.food);
+  document.getElementById("matNum").textContent=st.mat;
+  const pos = phase==="day" ? 8 : phase==="dusk" ? 50 : 92;
+  document.getElementById("dCursor").style.left="calc("+pos+"% - 2px)";
+  document.getElementById("dayLabel").textContent =
+    day+"日目 / "+(phase==="day"?"昼":phase==="dusk"?"夕暮れ":"夜（襲撃中）")
+    +(survived>0?" / 生還"+survived+"夜":"");
+  const powered = deviceNear(GEN,8);
+  const marks=[roofed(), powered,
+    powered&&deviceNear(WATER_GEN,6), powered&&deviceNear(AIR_GEN,6),
+    powered&&deviceNear(FARM,6), deviceNear(BED,5)];
+  ["ck1","ck2","ck3","ck4","ck5","ck6"].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.classList.toggle("ok",marks[i]);
+    el.lastElementChild.textContent = marks[i]?"◯":"✕";
+  });
+}
+
+// ================= 開始 / 終了 =================
+function startGame(){
+  genWorld(); clearMobs(); rebuild(); initPassives();
+  fx.forEach(f=>scene.remove(f.m)); fx=[];
+  player.x=17.5; player.z=11.5;
+  player.feet=groundY(17,11,MAXH+0.9);
+  player.vy=0; player.yaw=2.2; player.pitch=-0.35; player.rot=2.2;
+  st.hp=10; st.water=85; st.air=90; st.food=80; st.mat=12;
+  day=1; survived=0; over=false; setPhase("day");
+  document.getElementById("logLines").innerHTML="";
+  addLog("ヘルメットよし！今日からここが秘密基地だ");
+  addLog("昼のうちに掘って資材を集めよう");
+  started=true;
+  document.getElementById("intro").style.display="none";
+  document.getElementById("gameover").style.display="none";
+}
+document.getElementById("startBtn").addEventListener("click",startGame);
+document.getElementById("retryBtn").addEventListener("click",startGame);
+
+// ---------- ブログ埋め込み対応 ----------
+document.getElementById("openTab").href = location.href;
+document.getElementById("bFull").addEventListener("click",()=>{
+  try{
+    if(document.fullscreenElement){ document.exitFullscreen(); }
+    else if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen(); }
+    else if(document.documentElement.webkitRequestFullscreen){ document.documentElement.webkitRequestFullscreen(); }
+    else { window.open(location.href,"_blank"); }
+  }catch(e){ window.open(location.href,"_blank"); }
+});
+function gameOver(reason){
+  over=true;
+  document.getElementById("goText").textContent=reason+" 生き延びた日数: "+day+"日 / 夜からの生還: "+survived+"回";
+  document.getElementById("gameover").style.display="flex";
+  if(document.pointerLockElement) document.exitPointerLock();
+}
+
+// ================= メインループ =================
+function resize(){
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+}
+addEventListener("resize",resize); resize();
+genWorld(); rebuild(); initPassives();
+
+const camRay = new THREE.Raycaster();
+const camTarget = new THREE.Vector3(), camFwd = new THREE.Vector3(), camBack = new THREE.Vector3();
+let last=performance.now(), hudT=0;
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(started && !over){
+    // --- 移動 ---
+    let mx=0,mz=0;
+    if(keys.KeyW||keys.ArrowUp) mz-=1;
+    if(keys.KeyS||keys.ArrowDown) mz+=1;
+    if(keys.KeyA||keys.ArrowLeft) mx-=1;
+    if(keys.KeyD||keys.ArrowRight) mx+=1;
+    if(keys.Space) jump();
+    mx+=moveVec.x; mz+=moveVec.y;
+    const len=Math.hypot(mx,mz); if(len>1){mx/=len;mz/=len;}
+    moving = len>0.05;
+    const sp=4.2, sinY=Math.sin(player.yaw), cosY=Math.cos(player.yaw);
+    const dx=(mx*cosY + mz*sinY)*sp*dt;
+    const dz=(-mx*sinY + mz*cosY)*sp*dt;
+    const nx=Math.max(0.3,Math.min(SIZE-0.3,player.x+dx));
+    const nz=Math.max(0.3,Math.min(SIZE-0.3,player.z+dz));
+    if(tryAxis(nx,player.z)) player.x=nx;
+    if(tryAxis(player.x,nz)) player.z=nz;
+    // --- キャラの向きと歩行アニメ ---
+    if(moving){
+      const tr=Math.atan2(dx,dz);
+      let diff=tr-player.rot;
+      while(diff>Math.PI) diff-=Math.PI*2;
+      while(diff<-Math.PI) diff+=Math.PI*2;
+      player.rot+=diff*Math.min(1,12*dt);
+      walkT+=dt*9;
+    } else walkT*=Math.max(0,1-10*dt);
+    const sw=Math.sin(walkT)*0.65;
+    playerParts.armL.rotation.x=sw; playerParts.armR.rotation.x=-sw;
+    playerParts.legL.rotation.x=-sw; playerParts.legR.rotation.x=sw;
+    // --- 重力・天井 ---
+    player.vy-=18*dt;
+    let nf=player.feet+player.vy*dt;
+    if(player.vy<=0){
+      const g=groundY(Math.floor(player.x),Math.floor(player.z),player.feet);
+      if(nf<=g){ nf=g; player.vy=0; player.grounded=true; }
+      else player.grounded=false;
+    } else {
+      const cy=Math.floor(nf+1.8);
+      if(world.has(K(Math.floor(player.x),cy,Math.floor(player.z)))){ player.vy=0; nf=cy-1.81; }
+      player.grounded=false;
+    }
+    player.feet=nf;
+    playerMesh.position.set(player.x, player.feet, player.z);
+    playerMesh.rotation.y=player.rot;
+
+    // --- フェーズ ---
+    phaseT+=dt;
+    if(phase==="day" && phaseT>PHASE_LEN.day) setPhase("dusk");
+    else if(phase==="dusk" && phaseT>PHASE_LEN.dusk) setPhase("night");
+    else if(phase==="night" && phaseT>PHASE_LEN.night){
+      survived++; day++;
+      clearMobs();
+      if(deviceNear(BED,5)){ st.hp=Math.min(st.hpMax, st.hp+2.5);
+        addLog("ベッドでぐっすり眠った。体力が回復！（生還"+survived+"夜目）"); }
+      else addLog("朝が来た。怪物は日の光とともに消えた（生還"+survived+"夜目）");
+      if(survived===3) addLog("聖域は完成間近だ。ワインで乾杯しよう！");
+      setPhase("day");
+    }
+
+    // --- 夜の怪物 ---
+    if(phase==="night"){
+      mobT+=dt;
+      if(mobT>6){ mobT=0; spawnCreeper(); }
+    }
+    for(let i=mobs.length-1;i>=0;i--){
+      const m=mobs[i];
+      const ddx=player.x-m.x, ddz=player.z-m.z;
+      const dy=(m.y+0.8)-(player.feet+1);
+      const dh=Math.hypot(ddx,ddz);
+      const near = (dh<2.2 && Math.abs(dy)<2.2);
+      if(near){
+        m.fuse+=dt;
+        m.mesh.scale.setScalar(1+0.15*Math.sin(now*0.03));
+        if(m.fuse>0.25 && m.fuse<0.35) addLog("シューッ…怪物が膨らんでいる！");
+      } else {
+        m.fuse=Math.max(0,m.fuse-dt*1.5);
+        m.mesh.scale.setScalar(1);
+        if(dh>0.05){
+          const msp=1.6*dt;
+          const tx=m.x+ddx/dh*msp, tz=m.z+ddz/dh*msp;
+          let g2=mobGroundOK(m,tx,m.z); if(g2!==null){ m.x=tx; m.y=g2; }
+          g2=mobGroundOK(m,m.x,tz); if(g2!==null){ m.z=tz; m.y=g2; }
+        }
+      }
+      const gNow=groundY(Math.floor(m.x),Math.floor(m.z),m.y+0.01);
+      if(gNow<m.y) m.y=gNow;
+      m.mesh.position.set(m.x, m.y, m.z);
+      m.mesh.rotation.y=Math.atan2(ddx,ddz);
+      if(m.fuse>1.2){
+        explode(m.x, m.y+0.8, m.z);
+        scene.remove(m.mesh); mobs.splice(i,1);
+      }
+    }
+
+    // --- 動物（昼の風景） ---
+    for(const a of passives){
+      a.t+=dt;
+      if(a.t>a.next){ a.t=0; a.next=2+Math.random()*3; a.dir=Math.random()*6.28; }
+      const asp=0.7*dt;
+      const tx=a.x+Math.sin(a.dir)*asp, tz=a.z+Math.cos(a.dir)*asp;
+      if(tx>CITY_X+0.5&&tx<SIZE-0.5&&tz>0.5&&tz<SIZE-0.5){
+        let g2=mobGroundOK(a,tx,a.z); if(g2!==null){ a.x=tx; a.y=g2; } else a.dir+=2.5;
+        g2=mobGroundOK(a,a.x,tz); if(g2!==null){ a.z=tz; a.y=g2; } else a.dir+=2.5;
+      } else a.dir+=2.5;
+      const gNow=groundY(Math.floor(a.x),Math.floor(a.z),a.y+0.01);
+      if(gNow<a.y) a.y=gNow;
+      a.mesh.position.set(a.x,a.y,a.z);
+      a.mesh.rotation.y=a.dir;
+    }
+
+    // --- 雲・パーティクル ---
+    for(const c of clouds){ c.position.x+=0.25*dt; if(c.position.x>SIZE+4) c.position.x=-4; }
+    updateFx(dt);
+
+    // --- 資源 ---
+    const inShelter = roofed();
+    const powered = deviceNear(GEN,8);
+    const wG=powered&&deviceNear(WATER_GEN,6),
+          aG=powered&&deviceNear(AIR_GEN,6),
+          fG=powered&&deviceNear(FARM,6),
+          sG=deviceNear(STORAGE,6);
+    const slow = sG?0.6:1;
+    st.water -= 0.45*slow*dt; if(wG) st.water += 1.7*dt;
+    st.food  -= 0.35*slow*dt; if(fG) st.food  += 1.4*dt;
+    if(inShelter){ st.air += (aG? 2.2 : -1.1)*dt; }
+    else st.air += 1.8*dt;
+    st.water=Math.min(100,st.water); st.air=Math.min(100,st.air); st.food=Math.min(100,st.food);
+
+    // --- 枯渇ダメージ ---
+    let dmg=0;
+    if(st.water<=0) dmg+=0.25;
+    if(st.air<=0)   dmg+=0.35;
+    if(st.food<=0)  dmg+=0.2;
+    if(dmg>0) st.hp-=dmg*dt*2;
+    if(st.hp<=0 && !over){
+      gameOver(phase==="night" ? "怪物の爆発から身を守れなかった。装甲壁の聖域が必要だった…"
+                               : "水・空気・食料が尽きた。発電機と自給設備の整備が課題だ…");
+    }
+    // --- 被弾フラッシュ ---
+    if(hurtT>0){ hurtT-=dt; if(hurtT<=0) hurtEl.style.opacity=0; }
+  }
+
+  // --- 三人称カメラ（DQB風・壁にめり込まない） ---
+  camTarget.set(player.x, player.feet+1.4, player.z);
+  const cp=Math.cos(player.pitch), spc=Math.sin(player.pitch);
+  camFwd.set(-cp*Math.sin(player.yaw), spc, -cp*Math.cos(player.yaw));
+  let camDist=4.6;
+  camBack.copy(camFwd).negate();
+  camRay.set(camTarget, camBack);
+  camRay.far=camDist;
+  const chits=camRay.intersectObjects(meshes,false);
+  if(chits.length) camDist=Math.max(1.1, chits[0].distance-0.3);
+  camera.position.copy(camTarget).addScaledVector(camFwd,-camDist);
+  if(camera.position.y<0.4) camera.position.y=0.4;
+  camera.lookAt(camTarget);
+
+  const p=(started&&!over)?pick():null;
+  if(p){ hl.visible=true; hl.position.set(p.coord[0]+0.5,p.coord[1]+0.5,p.coord[2]+0.5); }
+  else hl.visible=false;
+
+  hudT+=dt;
+  if(hudT>0.3){ hudT=0; updateHUD(); }
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+updateHUD();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
